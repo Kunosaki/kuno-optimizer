@@ -88,7 +88,7 @@
           <div class="dash-action-card" id="quickScanCard">
             <div class="dash-action-icon">🔍</div>
             <div class="dash-action-info">
-              <div class="dash-action-title">Quick Scan</div>
+              <div class="dash-action-title">Quick Scan <span class="info-icon" title="Scans temp, prefetch, and browser cache directories. Shows deletable size, then runs Quick Clean.">?</span></div>
               <div class="dash-action-preview" id="quickScanPreview">Scan temp, cache & junk</div>
             </div>
             <button class="dash-action-btn" id="quickScanBtn">Scan</button>
@@ -96,7 +96,7 @@
           <div class="dash-action-card" id="memCleanCard">
             <div class="dash-action-icon">🧠</div>
             <div class="dash-action-info">
-              <div class="dash-action-title">Memory</div>
+              <div class="dash-action-title">Memory <span class="info-icon" title="Frees unused RAM by clearing working sets and running garbage collection. Similar to MemReduct.">?</span></div>
               <div class="dash-action-preview" id="memCleanPreview">
                 <span id="ramUsageBar" class="mem-bar"><span id="ramUsageFill" class="mem-fill" style="width:50%"></span></span>
                 <span id="ramUsageText">- / -</span>
@@ -114,19 +114,19 @@
           <p>Clean, repair, and optimize your system</p>
         </div>
         <div class="preset-cards">
-          <div class="preset-card" data-mode="quick">
+          <div class="preset-card" data-mode="quick" title="Removes Windows temporary files and user temp directories. Safe to run regularly.">
             <div class="preset-icon">🧹</div>
-            <div class="preset-name">Quick Clean</div>
+            <div class="preset-name">Quick Clean <span class="info-icon" title="Removes Windows and user temp files. Safe to run regularly.">?</span></div>
             <div class="preset-desc">Remove temp files</div>
           </div>
-          <div class="preset-card" data-mode="deep">
+          <div class="preset-card" data-mode="deep" title="Removes temp files + Windows Prefetch data + browser cache (Chrome, Edge, Firefox). May slow first launch after cleaning.">
             <div class="preset-icon">🔍</div>
-            <div class="preset-name">Deep Clean</div>
+            <div class="preset-name">Deep Clean <span class="info-icon" title="Temp + Prefetch + Browser cache. May slow first launch after cleaning.">?</span></div>
             <div class="preset-desc">Temp + prefetch + browser cache</div>
           </div>
-          <div class="preset-card" id="restorePointBtn">
+          <div class="preset-card" id="restorePointBtn" title="Creates a Windows System Restore checkpoint. If something goes wrong, use System Restore to revert. Requires admin.">
             <div class="preset-icon">🔄</div>
-            <div class="preset-name">Restore Point</div>
+            <div class="preset-name">Restore Point <span class="info-icon" title="Creates a restore checkpoint for rollback if something goes wrong. Requires admin.">?</span></div>
             <div class="preset-desc">Create system restore point</div>
           </div>
         </div>
@@ -158,7 +158,7 @@
           <div class="auto-tune-header">
             <div class="preset-icon">🤖</div>
             <div>
-              <div class="preset-name">Auto-Tune</div>
+              <div class="preset-name">Auto-Tune <span class="info-icon" title="Detects your GPU (NVIDIA/AMD/Intel), CPU cores, and RAM. Automatically applies the best preset + GPU optimizations.">?</span></div>
               <div class="preset-desc">Detect your hardware and apply optimal settings</div>
             </div>
           </div>
@@ -172,24 +172,24 @@
           <button class="auto-tune-btn" id="autoTuneBtn">🔍 Detect Hardware</button>
         </div>
         <div class="preset-cards large">
-          <div class="preset-card active" data-preset="balanced">
+          <div class="preset-card active" data-preset="balanced" title="Default Windows balanced power plan. Normal visual effects, moderate power usage. Good for everyday tasks.">
             <div class="preset-icon">⚖️</div>
-            <div class="preset-name">Balanced</div>
+            <div class="preset-name">Balanced <span class="info-icon" title="Default Windows balanced power plan. Normal visual effects, moderate power usage.">?</span></div>
             <div class="preset-desc">Default — normal performance</div>
           </div>
-          <div class="preset-card" data-preset="gaming">
+          <div class="preset-card" data-preset="gaming" title="High Performance power plan. Disables visual effects (animations, transparency) for max FPS. Ideal for gaming.">
             <div class="preset-icon">🎮</div>
-            <div class="preset-name">Gaming</div>
+            <div class="preset-name">Gaming <span class="info-icon" title="High Performance power plan. Disables visual effects for max FPS. Ideal for gaming.">?</span></div>
             <div class="preset-desc">Max FPS — kill bg processes</div>
           </div>
-          <div class="preset-card" data-preset="work">
+          <div class="preset-card" data-preset="work" title="Balanced power plan with stability focus. Keeps background services running. Good for productivity.">
             <div class="preset-icon">💼</div>
-            <div class="preset-name">Work</div>
+            <div class="preset-name">Work <span class="info-icon" title="Balanced power plan, stability focused. Good for productivity and office work.">?</span></div>
             <div class="preset-desc">Stability & productivity</div>
           </div>
-          <div class="preset-card" data-preset="battery">
+          <div class="preset-card" data-preset="battery" title="Power Saver plan. Disables visual effects, reduces performance to extend battery life on laptops.">
             <div class="preset-icon">🔋</div>
-            <div class="preset-name">Battery Saver</div>
+            <div class="preset-name">Battery Saver <span class="info-icon" title="Power Saver plan. Extends battery life by reducing performance and disabling effects.">?</span></div>
             <div class="preset-desc">Extend battery life</div>
           </div>
         </div>
@@ -229,32 +229,32 @@
           <p>Game booster, latency tweaks, app debloating</p>
         </div>
         <div class="preset-cards">
-          <div class="preset-card" id="gameBoosterOn">
+          <div class="preset-card" id="gameBoosterOn" title="Stops background services (SysMain, WSearch, TabletInput, etc.) and switches to High Performance power plan for max gaming FPS.">
             <div class="preset-icon">🎮</div>
-            <div class="preset-name">Game Booster ON</div>
+            <div class="preset-name">Game Booster ON <span class="info-icon" title="Stops non-essential services and enables High Performance power plan for gaming.">?</span></div>
             <div class="preset-desc">Stop bg services, high perf power plan</div>
           </div>
-          <div class="preset-card" id="gameBoosterOff">
+          <div class="preset-card" id="gameBoosterOff" title="Restarts previously stopped services and reverts to Balanced power plan.">
             <div class="preset-icon">🔄</div>
-            <div class="preset-name">Game Booster OFF</div>
+            <div class="preset-name">Game Booster OFF <span class="info-icon" title="Restarts services and reverts to Balanced power plan.">?</span></div>
             <div class="preset-desc">Restart services, balanced power</div>
           </div>
-          <div class="preset-card" id="latencyTweaksBtn">
+          <div class="preset-card" id="latencyTweaksBtn" title="Disables HPET (High Precision Event Timer) via BCDEdit and optimizes mouse/keyboard registry settings for lower input latency. May require reboot.">
             <div class="preset-icon">⚡</div>
-            <div class="preset-name">Latency Tweaks</div>
+            <div class="preset-name">Latency Tweaks <span class="info-icon" title="Disables HPET and optimizes mouse/keyboard for lower input latency. May need reboot.">?</span></div>
             <div class="preset-desc">Disable HPET, optimize mouse/keyboard</div>
           </div>
         </div>
         <div class="section-title" style="margin-top:12px">App Debloat</div>
         <div class="preset-cards">
-          <div class="preset-card" id="debloatDiscordBtn">
+          <div class="preset-card" id="debloatDiscordBtn" title="Removes Discord voice modules to reduce CPU/RAM usage. Voice calls fall back to browser quality.">
             <div class="preset-icon">💬</div>
-            <div class="preset-name">Debloat Discord</div>
+            <div class="preset-name">Debloat Discord <span class="info-icon" title="Removes Discord voice modules to reduce CPU/RAM usage.">?</span></div>
             <div class="preset-desc">Remove voice modules, reduce resource use</div>
           </div>
-          <div class="preset-card" id="debloatSpotifyBtn">
+          <div class="preset-card" id="debloatSpotifyBtn" title="Removes Spotify language packs and locale files to free up disk space and memory.">
             <div class="preset-icon">🎵</div>
-            <div class="preset-name">Debloat Spotify</div>
+            <div class="preset-name">Debloat Spotify <span class="info-icon" title="Removes Spotify language packs to free disk space and memory.">?</span></div>
             <div class="preset-desc">Remove language packs, reduce memory</div>
           </div>
         </div>
@@ -276,33 +276,33 @@
         <div id="ttab-network" class="ttab-content active">
           <div class="section-title">Network Utilities</div>
           <div class="network-cards">
-            <div class="preset-card" id="flushDnsBtn">
+            <div class="preset-card" id="flushDnsBtn" title="Clears the DNS resolver cache. Useful if websites aren't loading correctly after network changes.">
               <div class="preset-icon">🔄</div>
-              <div class="preset-name">Flush DNS</div>
+              <div class="preset-name">Flush DNS <span class="info-icon" title="Clears DNS cache. Useful after network changes or website loading issues.">?</span></div>
               <div class="preset-desc">Clear DNS resolver cache</div>
             </div>
-            <div class="preset-card" id="dnsDhcpBtn">
+            <div class="preset-card" id="dnsDhcpBtn" title="Resets your network adapter to use automatic DNS (DHCP) instead of a custom DNS server.">
               <div class="preset-icon">📡</div>
-              <div class="preset-name">Auto DNS (DHCP)</div>
+              <div class="preset-name">Auto DNS (DHCP) <span class="info-icon" title="Resets to automatic DNS from your ISP/router.">?</span></div>
               <div class="preset-desc">Reset to automatic DNS</div>
             </div>
           </div>
           <div class="section-title" style="margin-top:8px">Change DNS Server</div>
           <div class="dns-grid">
-            <div class="preset-card dns-card" data-primary="1.1.1.1" data-secondary="1.0.0.1">
-              <div class="preset-name">Cloudflare</div>
+            <div class="preset-card dns-card" data-primary="1.1.1.1" data-secondary="1.0.0.1" title="Cloudflare DNS — fast and privacy-focused. 1.1.1.1 (primary), 1.0.0.1 (secondary).">
+              <div class="preset-name">Cloudflare <span class="info-icon" title="Fast, privacy-focused DNS. Recommended for most users.">?</span></div>
               <div class="preset-desc">1.1.1.1 • 1.0.0.1</div>
             </div>
-            <div class="preset-card dns-card" data-primary="8.8.8.8" data-secondary="8.8.4.4">
-              <div class="preset-name">Google</div>
+            <div class="preset-card dns-card" data-primary="8.8.8.8" data-secondary="8.8.4.4" title="Google DNS — reliable but logs queries. 8.8.8.8 (primary), 8.8.4.4 (secondary).">
+              <div class="preset-name">Google <span class="info-icon" title="Reliable DNS from Google. May log queries.">?</span></div>
               <div class="preset-desc">8.8.8.8 • 8.8.4.4</div>
             </div>
-            <div class="preset-card dns-card" data-primary="208.67.222.222" data-secondary="208.67.220.220">
-              <div class="preset-name">OpenDNS</div>
+            <div class="preset-card dns-card" data-primary="208.67.222.222" data-secondary="208.67.220.220" title="OpenDNS — content filtering and phishing protection. 208.67.222.222 (primary).">
+              <div class="preset-name">OpenDNS <span class="info-icon" title="DNS with content filtering and phishing protection.">?</span></div>
               <div class="preset-desc">208.67.222.222</div>
             </div>
-            <div class="preset-card dns-card" data-primary="9.9.9.9" data-secondary="149.112.112.112">
-              <div class="preset-name">Quad9</div>
+            <div class="preset-card dns-card" data-primary="9.9.9.9" data-secondary="149.112.112.112" title="Quad9 — blocks known malicious domains. 9.9.9.9 (primary), 149.112.112.112 (secondary).">
+              <div class="preset-name">Quad9 <span class="info-icon" title="Blocks known malicious domains. Good security-focused choice.">?</span></div>
               <div class="preset-desc">9.9.9.9 • 149.112.112.112</div>
             </div>
           </div>
@@ -322,7 +322,7 @@
         <!-- Registry Cleaner -->
         <div id="ttab-registry" class="ttab-content">
           <div class="section-title">Registry Cleaner</div>
-          <p class="hosts-hint">Scan for invalid startup entries pointing to missing files</p>
+          <p class="hosts-hint">Scan for invalid startup entries pointing to missing files <span class="info-icon" title="Scans HKCU\Run, HKLM\Run, and RunOnce for entries that reference deleted/missing files. Safe to remove broken entries.">?</span></p>
           <button id="registryScanBtn" class="tool-action-btn primary">🔍 Scan Registry</button>
           <div id="registryProgress" class="progress-container" style="display:none">
             <div class="progress-bar"><div class="progress-fill" id="registryFill"></div></div>

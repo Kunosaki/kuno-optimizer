@@ -423,6 +423,15 @@ html, body {
 .dash-action-btn:disabled { opacity: 0.5; cursor: default; }
 .mem-bar { display: inline-block; width: 40px; height: 4px; background: #3a3a3c; border-radius: 2px; overflow: hidden; vertical-align: middle; }
 .mem-fill { display: block; height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.5s; }
+.info-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--text-secondary); color: var(--bg);
+  font-size: 9px; font-weight: 700; cursor: help;
+  margin-left: 3px; vertical-align: middle; line-height: 1;
+  opacity: 0.6; transition: opacity 0.15s;
+}
+.info-icon:hover { opacity: 1; }
 
 /* === EMPTY STATE === */
 .empty-state {

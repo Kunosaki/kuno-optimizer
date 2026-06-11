@@ -1,11 +1,26 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn, execSync } = require('child_process');
 const os = require('os');
 
 let mainWindow;
+let tray = null;
 let PROFILES_FILE;
+
+function createTray() {
+  const iconPath = path.join(__dirname, 'tray-icon.png');
+  if (!fs.existsSync(iconPath)) return;
+  tray = new Tray(nativeImage.createFromPath(iconPath));
+  tray.setToolTip('Kuno Optimizer');
+  const ctx = Menu.buildFromTemplate([
+    { label: 'Show Kuno', click: () => { mainWindow.show(); mainWindow.focus(); } },
+    { type: 'separator' },
+    { label: 'Quit', click: () => { app.isQuitting = true; app.quit(); } },
+  ]);
+  tray.setContextMenu(ctx);
+  tray.on('double-click', () => { mainWindow.show(); mainWindow.focus(); });
+}
 
 function getProfilesPath() {
   if (!PROFILES_FILE) PROFILES_FILE = path.join(app.getPath('userData'), 'profiles.json');
@@ -15,14 +30,20 @@ function getProfilesPath() {
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 960, height: 680, minWidth: 720, minHeight: 500,
-    frame: false,
+    frame: false, show: false,
     backgroundColor: '#1c1c1e',
+    icon: path.join(__dirname, 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
     },
-});
+  });
+  mainWindow.once('ready-to-show', () => mainWindow.show());
+  mainWindow.on('minimize', (e) => { e.preventDefault(); mainWindow.hide(); });
+  mainWindow.on('close', (e) => { if (!app.isQuitting) { e.preventDefault(); mainWindow.hide(); } });
+  createTray();
+  app.on('before-quit', () => { app.isQuitting = true; });
 
 // === QUICK SCANNER (preview what can be deleted) ===
 ipcMain.handle('sys:quick-scan', async () => {
@@ -357,19 +378,19 @@ ipcMain.handle('sys:disable-startup', async (_, { name }) => {
 // === PRIVACY — Services ===
 ipcMain.handle('sys:privacy-services', async () => {
   const services = [
-    { name: 'DiagTrack', label: 'Connected User Experiences and Telemetry' },
-    { name: 'dmwappushservice', label: 'Device Management WAP Push' },
-    { name: 'WMPNetworkSvc', label: 'WMP Network Sharing' },
-    { name: 'RemoteRegistry', label: 'Remote Registry' },
-    { name: 'SysMain', label: 'SysMain (Superfetch)' },
-    { name: 'WSearch', label: 'Windows Search Indexer' },
-    { name: 'XblAuthManager', label: 'Xbox Live Auth Manager' },
-    { name: 'XboxNetApiSvc', label: 'Xbox Live Networking' },
-    { name: 'lfsvc', label: 'Geolocation Service' },
-    { name: 'MapsBroker', label: 'Downloaded Maps Manager' },
-    { name: 'PcaSvc', label: 'Program Compatibility Assistant' },
-    { name: 'WbioSrvc', label: 'Windows Biometric Service' },
-    { name: 'wlidsvc', label: 'Microsoft Account Sign-in Assistant' },
+    { name: 'DiagTrack', label: 'Connected User Experiences and Telemetry', desc: 'Collects telemetry data sent to Microsoft. Disabling improves privacy.' },
+    { name: 'dmwappushservice', label: 'Device Management WAP Push', desc: 'Pushes device management and sync settings. Safe to disable for privacy.' },
+    { name: 'WMPNetworkSvc', label: 'WMP Network Sharing', desc: 'Shares Windows Media Player libraries. Safe to disable if not streaming.' },
+    { name: 'RemoteRegistry', label: 'Remote Registry', desc: 'Allows remote registry editing. Security risk — safe to disable.' },
+    { name: 'SysMain', label: 'SysMain (Superfetch)', desc: 'Preloads frequently used apps into RAM. Disabling frees memory, may slow app launch.' },
+    { name: 'WSearch', label: 'Windows Search Indexer', desc: 'Indexes files for fast search. Disabling saves CPU but slows file searches.' },
+    { name: 'XblAuthManager', label: 'Xbox Live Auth Manager', desc: 'Handles Xbox Live authentication. Safe to disable if you don\'t use Xbox.' },
+    { name: 'XboxNetApiSvc', label: 'Xbox Live Networking', desc: 'Networking for Xbox Live. Safe to disable if you don\'t use Xbox.' },
+    { name: 'lfsvc', label: 'Geolocation Service', desc: 'Provides location data to apps. Disabling improves privacy.' },
+    { name: 'MapsBroker', label: 'Downloaded Maps Manager', desc: 'Manages downloaded maps. Safe to disable if not using Maps app.' },
+    { name: 'PcaSvc', label: 'Program Compatibility Assistant', desc: 'Detects compatibility issues. Can be disabled to reduce background CPU.' },
+    { name: 'WbioSrvc', label: 'Windows Biometric Service', desc: 'Handles fingerprint/face login. Disable if you use PIN/password only.' },
+    { name: 'wlidsvc', label: 'Microsoft Account Sign-in Assistant', desc: 'Manages Microsoft account sign-in. Safe to disable for local accounts.' },
   ];
   const results = [];
   for (const svc of services) {

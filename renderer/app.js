@@ -431,9 +431,10 @@ async function loadServices() {
     const el = document.createElement('div');
     el.className = 'service-item';
     const running = svc.running;
+    const desc = svc.desc || 'Toggle this service on/off';
     el.innerHTML = `
       <div class="service-info">
-        <div class="service-name">${esc(svc.name)}</div>
+        <div class="service-name">${esc(svc.name)}<span class="info-icon" title="${esc(desc)}">?</span></div>
         <div class="service-label">${esc(svc.label)}</div>
       </div>
       <span class="service-badge ${running ? 'running' : 'stopped'}">${running ? 'Running' : 'Stopped'}</span>

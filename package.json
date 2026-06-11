@@ -22,13 +22,12 @@
       "node_modules/**/*",
       "!node_modules/electron/dist"
     ],
+    "icon": "icon.png",
     "win": {
       "target": [
         {
           "target": "portable",
-          "arch": [
-            "x64"
-          ]
+          "arch": ["x64"]
         }
       ],
       "artifactName": "Kuno-Optimizer-${version}.${ext}"
