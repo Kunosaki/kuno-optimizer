@@ -1,5 +1,10 @@
 let currentUser = null;
 
+// Window controls
+document.querySelector('.dot.close')?.addEventListener('click', () => window.kuno.close());
+document.querySelector('.dot.minimize')?.addEventListener('click', () => window.kuno.minimize());
+document.querySelector('.dot.maximize')?.addEventListener('click', () => window.kuno.maximize());
+
 // DOM refs
 const loginScreen = document.getElementById('loginScreen');
 const appScreen = document.getElementById('appScreen');

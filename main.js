@@ -13,11 +13,10 @@ function getProfilesPath() {
 }
 
 function createWindow() {
-  const isMac = process.platform === 'darwin';
   mainWindow = new BrowserWindow({
-    width: 960, height: 680,
-    titleBarStyle: isMac ? 'hiddenInset' : 'hidden',
-    backgroundColor: '#f5f5f7',
+    width: 960, height: 680, minWidth: 720, minHeight: 500,
+    frame: false,
+    backgroundColor: '#1c1c1e',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -26,6 +25,12 @@ function createWindow() {
   });
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 }
+
+ipcMain.handle('win:minimize', () => mainWindow?.minimize());
+ipcMain.handle('win:maximize', () => {
+  if (mainWindow?.isMaximized()) mainWindow.unmaximize(); else mainWindow?.maximize();
+});
+ipcMain.handle('win:close', () => mainWindow?.close());
 
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

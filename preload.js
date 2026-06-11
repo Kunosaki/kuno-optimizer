@@ -8,4 +8,7 @@ contextBridge.exposeInMainWorld('kuno', {
   runCleanup: (mode) => ipcRenderer.invoke('sys:cleanup', { mode }),
   getStartup: () => ipcRenderer.invoke('sys:startup'),
   disableStartup: (cmd) => ipcRenderer.invoke('sys:disable-startup', cmd),
+  minimize: () => ipcRenderer.invoke('win:minimize'),
+  maximize: () => ipcRenderer.invoke('win:maximize'),
+  close: () => ipcRenderer.invoke('win:close'),
 });
