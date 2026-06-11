@@ -201,9 +201,9 @@ ipcMain.handle('sys:startup', async () => {
   return items;
 });
 
-ipcMain.handle('sys:disable-startup', async (_, { command }) => {
+ipcMain.handle('sys:disable-startup', async (_, { name }) => {
   try {
-    execSync(`reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "${command}" /f 2>nul`, { timeout: 3000 });
+    execSync(`reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "${name}" /f 2>nul`, { timeout: 3000 });
     return { success: true };
   } catch {
     return { success: false, error: 'Could not disable startup entry' };

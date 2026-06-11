@@ -1,12 +1,13 @@
 {
   "name": "kuno-optimizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "PC Optimizer by Kuno — clean, speed up, and monitor your computer",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
-    "build:win": "electron-builder --win"
+    "build:portable": "electron-builder --win portable",
+    "pack": "electron-packager . \"Kuno Optimizer\" --platform=win32 --arch=x64 --out=release --prune --overwrite"
   },
   "build": {
     "appId": "com.kuno.optimizer",
@@ -22,6 +23,7 @@
     }
   },
   "devDependencies": {
-    "electron": "^42.4.0"
+    "electron": "^42.4.0",
+    "@electron/packager": "^18.3.0"
   }
 }

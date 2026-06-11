@@ -194,7 +194,7 @@ async function loadStartup() {
     `;
     list.appendChild(el);
     el.querySelector('.startup-btn').addEventListener('click', async () => {
-      const r = await window.kuno.disableStartup({ command: item.command });
+      const r = await window.kuno.disableStartup({ name: item.name });
       if (r.success) {
         el.style.opacity = '0.3';
         el.querySelector('.startup-btn').textContent = 'Disabled';
