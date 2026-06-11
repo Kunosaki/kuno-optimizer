@@ -1,6 +1,6 @@
 {
   "name": "kuno-optimizer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "PC Optimizer by Kuno — clean, speed up, and monitor your computer",
   "main": "main.js",
   "scripts": {

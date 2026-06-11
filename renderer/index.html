@@ -50,6 +50,7 @@
       <button class="tool-btn" data-tab="optimize">Optimize</button>
       <button class="tool-btn" data-tab="startup">Startup</button>
       <button class="tool-btn" data-tab="presets">Presets</button>
+      <button class="tool-btn" data-tab="help">Help</button>
       <button class="tool-btn" data-tab="credits">Credits</button>
     </div>
 
@@ -153,6 +154,33 @@
         <div id="presetStatus" class="preset-status"></div>
       </div>
 
+      <!-- HELP / SUPPORT -->
+      <div id="tab-help" class="tab-content">
+        <div class="help-container">
+          <div class="cleanup-header">
+            <h2>Help & Support</h2>
+            <p>Ask me anything about Kuno Optimizer</p>
+          </div>
+          <div class="chat-box" id="chatBox">
+            <div class="chat-msg bot">
+              <div class="chat-avatar">K</div>
+              <div class="chat-bubble">Hi! I'm Kuno Assistant. Ask me about dashboard, cleanup, startup, presets, or optimization tips!</div>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Type a question...">
+            <button id="chatSendBtn" class="chat-send">Send</button>
+          </div>
+          <div class="help-suggestions">
+            <button class="suggestion-btn" data-ask="dashboard">What's on the Dashboard?</button>
+            <button class="suggestion-btn" data-ask="cleanup">How do I clean my PC?</button>
+            <button class="suggestion-btn" data-ask="startup">Manage startup programs?</button>
+            <button class="suggestion-btn" data-ask="presets">What are presets?</button>
+            <button class="suggestion-btn" data-ask="tips">Optimization tips</button>
+          </div>
+        </div>
+      </div>
+
       <!-- CREDITS -->
       <div id="tab-credits" class="tab-content">
         <div class="credits-container">
@@ -163,7 +191,7 @@
             </svg>
           </div>
           <h1 class="credits-title">Kuno Optimizer</h1>
-          <p class="credits-version">v1.0.1</p>
+          <p class="credits-version">v1.0.2</p>
           <p class="credits-made">made by <strong>Kuno</strong></p>
           <div class="credits-divider"></div>
           <p class="credits-desc">

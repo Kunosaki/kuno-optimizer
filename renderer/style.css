@@ -239,6 +239,46 @@ html, body {
 }
 .credits-links a:hover { background: var(--accent); color: white; }
 
+/* === HELP CHAT === */
+.help-container { display: flex; flex-direction: column; height: 100%; gap: 8px; flex: 1; min-height: 0; }
+.chat-box { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 4px; }
+.chat-msg { display: flex; gap: 8px; align-items: flex-start; max-width: 85%; }
+.chat-msg.user { align-self: flex-end; flex-direction: row-reverse; }
+.chat-avatar {
+  width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+.chat-msg.bot .chat-avatar { background: var(--accent); color: white; }
+.chat-msg.user .chat-avatar { background: var(--safe); color: white; }
+.chat-bubble {
+  padding: 10px 14px; border-radius: 14px; font-size: 12px; line-height: 1.5;
+  background: var(--surface); border: 1px solid var(--border);
+}
+.chat-msg.bot .chat-bubble { border-bottom-left-radius: 4px; }
+.chat-msg.user .chat-bubble { border-bottom-right-radius: 4px; background: var(--accent); color: white; border-color: var(--accent); }
+.chat-bubble strong { color: var(--accent); }
+.chat-msg.user .chat-bubble strong { color: rgba(255,255,255,0.85); }
+.chat-input-row { display: flex; gap: 8px; flex-shrink: 0; }
+.chat-input {
+  flex: 1; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); font-size: 13px;
+  font-family: var(--font); outline: none;
+}
+.chat-input:focus { border-color: var(--accent); }
+.chat-send {
+  padding: 10px 20px; border-radius: 10px; border: none;
+  background: var(--accent); color: white; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: var(--font);
+}
+.chat-send:hover { opacity: 0.85; }
+.help-suggestions { display: flex; flex-wrap: wrap; gap: 6px; flex-shrink: 0; }
+.suggestion-btn {
+  padding: 5px 12px; border-radius: 16px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-secondary); font-size: 11px;
+  cursor: pointer; font-family: var(--font); transition: all 0.2s;
+}
+.suggestion-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(10,132,255,0.05); }
+
 /* === EMPTY STATE === */
 .empty-state {
   display: flex; align-items: center; justify-content: center;

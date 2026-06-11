@@ -82,7 +82,7 @@ async function loadDashboard() {
   document.getElementById('ramTotal').textContent = formatBytes(info.totalMem);
   document.getElementById('osName').textContent = info.platform === 'win32' ? 'Windows' : info.platform;
   document.getElementById('sysHostname').textContent = info.hostname;
-  document.getElementById('sysCpu').textContent = info.cpuModel.substring(0, 35);
+  document.getElementById('sysCpu').textContent = (info.cpuModel || 'Unknown').substring(0, 35);
   document.getElementById('sysArch').textContent = info.arch;
   document.getElementById('sysUptime').textContent = formatUptime(info.uptime);
 
@@ -234,6 +234,86 @@ document.querySelectorAll('#tab-presets .preset-card').forEach(card => {
       status.style.border = '1px solid var(--warn)';
       status.style.color = 'var(--warn)';
     }
+  });
+});
+
+// === HELP / AI ASSISTANT ===
+const helpDB = {
+  dashboard: {
+    keywords: ['dashboard', 'system info', 'specs', 'monitor', 'disk', 'usage'],
+    answer: 'The <strong>Dashboard</strong> shows your system at a glance — CPU cores, total RAM, OS type, hostname, CPU model, uptime, and disk usage for each drive. Disk bars turn yellow above 70% and red above 90%. It refreshes each time you click the tab.'
+  },
+  cleanup: {
+    keywords: ['clean', 'cleanup', 'temp', 'cache', 'junk', 'browser', 'deep clean', 'quick clean'],
+    answer: 'Use the <strong>Optimize</strong> tab. <strong>Quick Clean</strong> removes temporary files. <strong>Deep Clean</strong> also clears Prefetch and browser caches (Chrome, Edge, Firefox). Results show how many items were removed and how much space you freed. You can also create a <strong>Restore Point</strong> before cleaning.'
+  },
+  startup: {
+    keywords: ['startup', 'boot', 'disable startup', 'autostart', 'launch'],
+    answer: 'The <strong>Startup Manager</strong> lists all programs that launch when Windows starts. Click <strong>Disable</strong> next to any entry to remove it from the registry Run key. This can speed up boot time. Some entries from the Startup folder may not be removable here.'
+  },
+  presets: {
+    keywords: ['preset', 'performance', 'gaming', 'battery', 'power', 'balanced', 'work', 'mode'],
+    answer: 'Presets apply real Windows tweaks:<br>• <strong>Gaming</strong> — High Performance power plan + disables visual effects for max FPS<br>• <strong>Work</strong> — Balanced plan, stability focused<br>• <strong>Battery Saver</strong> — Power Saver plan, minimal effects<br>• <strong>Balanced</strong> — Default power plan with normal effects'
+  },
+  tips: {
+    keywords: ['tip', 'tips', 'advice', 'optimize', 'speed up', 'faster', 'performance', 'tweak'],
+    answer: 'Quick performance tips:<br>1. Run <strong>Deep Clean</strong> weekly to clear junk<br>2. Use <strong>Gaming preset</strong> before launching games<br>3. Disable unnecessary startup programs<br>4. Create a <strong>Restore Point</strong> before major changes<br>5. Keep your drivers updated<br>6. Avoid running too many background apps'
+  },
+  restore: {
+    keywords: ['restore point', 'backup', 'system restore', 'rollback', 'checkpoint'],
+    answer: 'The <strong>Restore Point</strong> button in the Optimize tab creates a Windows System Restore checkpoint. If something goes wrong after a cleanup or preset change, you can use Windows System Restore to revert your PC to this saved state. Requires admin privileges.'
+  },
+  general: {
+    keywords: ['hello', 'hi', 'hey', 'what is', 'who', 'help', 'support', 'kuno', 'app'],
+    answer: 'I\'m <strong>Kuno Assistant</strong> — your built-in help bot for Kuno Optimizer. I can answer questions about the Dashboard, cleanup tools, Startup Manager, performance presets, restore points, and optimization tips. What would you like to know?'
+  }
+};
+
+function getBotAnswer(input) {
+  const text = input.toLowerCase().trim();
+  if (!text) return helpDB.general.answer;
+  let bestMatch = { score: 0, answer: helpDB.general.answer };
+  for (const topic of Object.values(helpDB)) {
+    for (const kw of topic.keywords) {
+      if (text.includes(kw)) {
+        const score = kw.length;
+        if (score > bestMatch.score) {
+          bestMatch = { score, answer: topic.answer };
+        }
+      }
+    }
+  }
+  return bestMatch.answer;
+}
+
+function addChatMessage(text, isUser) {
+  const box = document.getElementById('chatBox');
+  const msg = document.createElement('div');
+  msg.className = 'chat-msg ' + (isUser ? 'user' : 'bot');
+  msg.innerHTML = `<div class="chat-avatar">${isUser ? 'U' : 'K'}</div><div class="chat-bubble">${text}</div>`;
+  box.appendChild(msg);
+  box.scrollTop = box.scrollHeight;
+}
+
+function handleChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  addChatMessage(esc(text), true);
+  input.value = '';
+  setTimeout(() => {
+    addChatMessage(getBotAnswer(text), false);
+  }, 300);
+}
+
+document.getElementById('chatSendBtn').addEventListener('click', handleChat);
+document.getElementById('chatInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') handleChat();
+});
+document.querySelectorAll('.suggestion-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById('chatInput').value = btn.dataset.ask;
+    handleChat();
   });
 });
 

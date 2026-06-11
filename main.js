@@ -145,15 +145,27 @@ ipcMain.handle('sys:disks', () => {
 
 ipcMain.handle('sys:cleanup', async (_, { mode }) => {
   const results = [];
+  const homedir = os.homedir();
+
+  const browserDirs = [
+    path.join(homedir, 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'Default', 'Cache'),
+    path.join(homedir, 'AppData', 'Local', 'Microsoft', 'Edge', 'User Data', 'Default', 'Cache'),
+  ];
+
+  const ffProfiles = path.join(homedir, 'AppData', 'Roaming', 'Mozilla', 'Firefox', 'Profiles');
+  if (fs.existsSync(ffProfiles)) {
+    try {
+      for (const p of fs.readdirSync(ffProfiles)) {
+        const cache2 = path.join(ffProfiles, p, 'cache2', 'entries');
+        if (fs.existsSync(cache2)) browserDirs.push(cache2);
+      }
+    } catch {}
+  }
+
   const dirs = {
-    temp: [os.tmpdir(), path.join(os.homedir(), 'AppData', 'Local', 'Temp')],
+    temp: [os.tmpdir(), path.join(homedir, 'AppData', 'Local', 'Temp')],
     prefetch: [path.join(process.env.SYSTEMROOT || 'C:\\Windows', 'Prefetch')],
-    recycle: [],
-    browser: [
-      path.join(os.homedir(), 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'Default', 'Cache'),
-      path.join(os.homedir(), 'AppData', 'Local', 'Microsoft', 'Edge', 'User Data', 'Default', 'Cache'),
-      path.join(os.homedir(), 'AppData', 'Local', 'Mozilla', 'Firefox', 'Profiles'),
-    ],
+    browser: browserDirs,
   };
 
   const targets = mode === 'quick' ? ['temp'] :
