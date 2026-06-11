@@ -32,6 +32,46 @@ ipcMain.handle('win:maximize', () => {
 });
 ipcMain.handle('win:close', () => mainWindow?.close());
 
+// Restore Point
+ipcMain.handle('sys:restore-point', async () => {
+  try {
+    execSync('powershell -Command "Checkpoint-Computer -Description \'Kuno Optimizer Restore Point\' -RestorePointType MODIFY_SETTINGS"', { timeout: 30000 });
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: 'Create failed. Try running as Admin.' };
+  }
+});
+
+// Presets — real optimization
+ipcMain.handle('sys:apply-preset', async (_, name) => {
+  try {
+    const cmds = {
+      gaming: [
+        'powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c', // High performance
+        'reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects" /v VisualFXSetting /t REG_DWORD /d 2 /f',
+      ],
+      work: [
+        'powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2f', // Balanced
+      ],
+      battery: [
+        'powercfg /setactive a1841308-3541-4fab-bc81-f71556f20b4a', // Power saver
+        'reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects" /v VisualFXSetting /t REG_DWORD /d 0 /f',
+      ],
+      balanced: [
+        'powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2f', // Balanced
+        'reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects" /v VisualFXSetting /t REG_DWORD /d 1 /f',
+      ],
+    };
+    const commands = cmds[name] || cmds.balanced;
+    for (const cmd of commands) {
+      try { execSync(cmd, { timeout: 5000 }); } catch {}
+    }
+    return { success: true };
+  } catch {
+    return { success: false, error: 'Failed to apply preset' };
+  }
+});
+
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });

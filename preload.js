@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld('kuno', {
   runCleanup: (mode) => ipcRenderer.invoke('sys:cleanup', { mode }),
   getStartup: () => ipcRenderer.invoke('sys:startup'),
   disableStartup: (cmd) => ipcRenderer.invoke('sys:disable-startup', cmd),
+  createRestorePoint: () => ipcRenderer.invoke('sys:restore-point'),
+  applyPreset: (name) => ipcRenderer.invoke('sys:apply-preset', name),
   minimize: () => ipcRenderer.invoke('win:minimize'),
   maximize: () => ipcRenderer.invoke('win:maximize'),
   close: () => ipcRenderer.invoke('win:close'),
