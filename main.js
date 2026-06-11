@@ -5,7 +5,12 @@ const { spawn, execSync } = require('child_process');
 const os = require('os');
 
 let mainWindow;
-const PROFILES_FILE = path.join(app.getPath('userData'), 'profiles.json');
+let PROFILES_FILE;
+
+function getProfilesPath() {
+  if (!PROFILES_FILE) PROFILES_FILE = path.join(app.getPath('userData'), 'profiles.json');
+  return PROFILES_FILE;
+}
 
 function createWindow() {
   const isMac = process.platform === 'darwin';
@@ -29,12 +34,12 @@ app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) creat
 // Profile management
 function loadProfiles() {
   try {
-    return JSON.parse(fs.readFileSync(PROFILES_FILE, 'utf8'));
+    return JSON.parse(fs.readFileSync(getProfilesPath(), 'utf8'));
   } catch { return {}; }
 }
 
 function saveProfiles(profiles) {
-  fs.writeFileSync(PROFILES_FILE, JSON.stringify(profiles, null, 2));
+  fs.writeFileSync(getProfilesPath(), JSON.stringify(profiles, null, 2));
 }
 
 ipcMain.handle('auth:login', (_, { username, password }) => {
