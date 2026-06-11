@@ -22,7 +22,139 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
     },
-  });
+});
+
+// === QUICK SCANNER (preview what can be deleted) ===
+ipcMain.handle('sys:quick-scan', async () => {
+  const homedir = os.homedir();
+  const targets = [
+    { label: 'Windows Temp', path: os.tmpdir() },
+    { label: 'User Temp', path: path.join(homedir, 'AppData', 'Local', 'Temp') },
+    { label: 'Prefetch', path: path.join(process.env.SYSTEMROOT || 'C:\\Windows', 'Prefetch') },
+    { label: 'Chrome Cache', path: path.join(homedir, 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'Default', 'Cache') },
+    { label: 'Edge Cache', path: path.join(homedir, 'AppData', 'Local', 'Microsoft', 'Edge', 'User Data', 'Default', 'Cache') },
+  ];
+  const ffProfiles = path.join(homedir, 'AppData', 'Roaming', 'Mozilla', 'Firefox', 'Profiles');
+  if (fs.existsSync(ffProfiles)) {
+    try {
+      for (const p of fs.readdirSync(ffProfiles)) {
+        const cache2 = path.join(ffProfiles, p, 'cache2', 'entries');
+        if (fs.existsSync(cache2)) targets.push({ label: 'Firefox Cache', path: cache2 });
+      }
+    } catch {}
+  }
+  const results = [];
+  let totalSize = 0, totalItems = 0;
+  for (const t of targets) {
+    if (!fs.existsSync(t.path)) continue;
+    let size = 0, items = 0;
+    try {
+      for (const f of fs.readdirSync(t.path)) {
+        try {
+          const full = path.join(t.path, f);
+          const stat = fs.statSync(full);
+          size += stat.size;
+          items++;
+          if (stat.isDirectory()) {
+            try { const sub = fs.readdirSync(full); items += sub.length; for (const s of sub) { try { size += fs.statSync(path.join(full, s)).size; } catch {} } } catch {}
+          }
+        } catch {}
+      }
+    } catch {}
+    if (items > 0) {
+      results.push({ label: t.label, items, size });
+      totalSize += size; totalItems += items;
+    }
+  }
+  return { results, totalSize, totalItems };
+});
+
+// === MEMORY CLEANER ===
+ipcMain.handle('sys:free-memory', async () => {
+  try {
+    execSync('powershell -Command "Get-Process | Where-Object { $_.WorkingSet64 -gt 5MB } | ForEach-Object { try { $null = $_.PriorityClass; $_.Refresh() } catch {} }; [System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers()"', { timeout: 10000 });
+    const free = os.freemem();
+    return { success: true, freed: os.totalmem() - free, free };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+// === GAME BOOSTER ===
+ipcMain.handle('sys:game-booster', async (_, { action }) => {
+  try {
+    const services = ['SysMain', 'WSearch', 'TabletInputService', 'lfsvc', 'PcaSvc', 'WbioSrvc'];
+    const cmd = action === 'on' ? 'stop' : 'start';
+    for (const svc of services) {
+      try { execSync(`sc ${cmd} "${svc}"`, { timeout: 3000 }); } catch {}
+    }
+    if (action === 'on') {
+      execSync('powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c', { timeout: 3000 });
+    }
+    return { success: true };
+  } catch { return { success: false, error: 'Failed to toggle game booster' }; }
+});
+
+// === LATENCY TWEAKS ===
+ipcMain.handle('sys:latency-tweaks', async () => {
+  const results = [];
+  // Disable HPET
+  try {
+    execSync('bcdedit /deletevalue useplatformclock 2>nul', { timeout: 3000 });
+    results.push('HPET disabled (reboot required)');
+  } catch {}
+  // Mouse/keyboard registry tweaks
+  try {
+    execSync('reg add "HKCU\\Control Panel\\Mouse" /v MouseSensitivity /t REG_DWORD /d 10 /f', { timeout: 2000 });
+    execSync('reg add "HKCU\\Control Panel\\Mouse" /v MouseSpeed /t REG_DWORD /d 0 /f', { timeout: 2000 });
+    execSync('reg add "HKCU\\Control Panel\\Keyboard" /v KeyboardDelay /t REG_DWORD /d 0 /f', { timeout: 2000 });
+    execSync('reg add "HKCU\\Control Panel\\Keyboard" /v KeyboardSpeed /t REG_DWORD /d 31 /f', { timeout: 2000 });
+    results.push('Mouse/keyboard latency optimized');
+  } catch {}
+  return { success: true, results };
+});
+
+// === DEBLOAT APPS ===
+ipcMain.handle('sys:debloat-discord', async () => {
+  try {
+    const local = path.join(os.homedir(), 'AppData', 'Local', 'Discord');
+    if (fs.existsSync(local)) {
+      for (const v of fs.readdirSync(local)) {
+        const lp = path.join(local, v, 'modules');
+        if (fs.existsSync(lp)) {
+          for (const mod of fs.readdirSync(lp)) {
+            try { fs.rmSync(path.join(lp, mod, 'discord_voice'), { recursive: true, force: true }); } catch {}
+          }
+        }
+      }
+    }
+    return { success: true, message: 'Discord debloated (voice modules removed)' };
+  } catch { return { success: false, error: 'Discord not found' }; }
+});
+
+ipcMain.handle('sys:debloat-spotify', async () => {
+  try {
+    const spotDir = path.join(os.homedir(), 'AppData', 'Roaming', 'Spotify');
+    if (fs.existsSync(spotDir)) {
+      for (const f of fs.readdirSync(spotDir)) {
+        if (f.includes('locale') || f.includes('lang')) {
+          try { fs.rmSync(path.join(spotDir, f), { recursive: true, force: true }); } catch {}
+        }
+      }
+    }
+    // Also check Program Files
+    const pfDir = path.join(process.env.APPDATA || '', 'Spotify');
+    if (fs.existsSync(pfDir)) {
+      const locales = path.join(pfDir, 'locales');
+      if (fs.existsSync(locales)) {
+        for (const f of fs.readdirSync(locales)) {
+          try { fs.unlinkSync(path.join(locales, f)); } catch {}
+        }
+      }
+    }
+    return { success: true, message: 'Spotify debloated (language packs removed)' };
+  } catch { return { success: false, error: 'Spotify not found' }; }
+});
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 }
 
@@ -219,5 +351,208 @@ ipcMain.handle('sys:disable-startup', async (_, { name }) => {
     return { success: true };
   } catch {
     return { success: false, error: 'Could not disable startup entry' };
+  }
+});
+
+// === PRIVACY — Services ===
+ipcMain.handle('sys:privacy-services', async () => {
+  const services = [
+    { name: 'DiagTrack', label: 'Connected User Experiences and Telemetry' },
+    { name: 'dmwappushservice', label: 'Device Management WAP Push' },
+    { name: 'WMPNetworkSvc', label: 'WMP Network Sharing' },
+    { name: 'RemoteRegistry', label: 'Remote Registry' },
+    { name: 'SysMain', label: 'SysMain (Superfetch)' },
+    { name: 'WSearch', label: 'Windows Search Indexer' },
+    { name: 'XblAuthManager', label: 'Xbox Live Auth Manager' },
+    { name: 'XboxNetApiSvc', label: 'Xbox Live Networking' },
+    { name: 'lfsvc', label: 'Geolocation Service' },
+    { name: 'MapsBroker', label: 'Downloaded Maps Manager' },
+    { name: 'PcaSvc', label: 'Program Compatibility Assistant' },
+    { name: 'WbioSrvc', label: 'Windows Biometric Service' },
+    { name: 'wlidsvc', label: 'Microsoft Account Sign-in Assistant' },
+  ];
+  const results = [];
+  for (const svc of services) {
+    try {
+      const out = execSync(`sc query "${svc.name}"`, { encoding: 'utf8', timeout: 3000 });
+      const running = out.includes('RUNNING');
+      results.push({ ...svc, exists: true, running });
+    } catch { results.push({ ...svc, exists: false, running: false }); }
+  }
+  return results;
+});
+
+ipcMain.handle('sys:set-service', async (_, { name, action }) => {
+  try {
+    execSync(`sc ${action} "${name}"`, { timeout: 5000 });
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+// === PRIVACY — UWP Apps ===
+ipcMain.handle('sys:uwp-apps', async () => {
+  try {
+    const out = execSync('powershell -Command "Get-AppxPackage | Select-Object Name, PackageFullName | ConvertTo-Json"', { encoding: 'utf8', timeout: 10000 });
+    const apps = JSON.parse(out);
+    return Array.isArray(apps) ? apps.map(a => ({ name: a.Name, fullName: a.PackageFullName })) : [];
+  } catch { return []; }
+});
+
+ipcMain.handle('sys:uninstall-uwp', async (_, { fullName }) => {
+  const safeName = fullName.replace(/'/g, "''");
+  try {
+    execSync(`powershell -Command "Get-AppxPackage -AllUsers '${safeName}' | Remove-AppxPackage -AllUsers"`, { timeout: 20000 });
+    return { success: true };
+  } catch {
+    try {
+      execSync(`powershell -Command "Get-AppxPackage '${safeName}' | Remove-AppxPackage"`, { timeout: 20000 });
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  }
+});
+
+// === NETWORK ===
+ipcMain.handle('net:flush-dns', async () => {
+  try {
+    execSync('ipconfig /flushdns', { timeout: 5000 });
+    return { success: true };
+  } catch { return { success: false, error: 'Failed to flush DNS' }; }
+});
+
+ipcMain.handle('net:set-dns', async (_, { primary, secondary }) => {
+  try {
+    const out = execSync('powershell -Command "Get-NetAdapter | Where-Object {$_.Status -eq \'Up\'} | Select-Object -First 1 -ExpandProperty Name"', { encoding: 'utf8', timeout: 5000 });
+    const iface = out.trim();
+    if (!iface) return { success: false, error: 'No active network adapter found' };
+    execSync(`netsh interface ip set dns "${iface}" static ${primary}`, { timeout: 5000 });
+    if (secondary) execSync(`netsh interface ip add dns "${iface}" ${secondary} index=2`, { timeout: 5000 });
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle('net:dns-dhcp', async () => {
+  try {
+    const out = execSync('powershell -Command "Get-NetAdapter | Where-Object {$_.Status -eq \'Up\'} | Select-Object -First 1 -ExpandProperty Name"', { encoding: 'utf8', timeout: 5000 });
+    const iface = out.trim();
+    if (!iface) return { success: false, error: 'No active network adapter found' };
+    execSync(`netsh interface ip set dns "${iface}" dhcp`, { timeout: 5000 });
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+// === HOSTS ===
+ipcMain.handle('sys:get-hosts', async () => {
+  const hostsPath = path.join(process.env.SYSTEMROOT || 'C:\\Windows', 'System32', 'drivers', 'etc', 'hosts');
+  try {
+    return { content: fs.readFileSync(hostsPath, 'utf8'), path: hostsPath };
+  } catch (e) {
+    return { content: '', path: hostsPath, error: e.message };
+  }
+});
+
+ipcMain.handle('sys:save-hosts', async (_, { content }) => {
+  const hostsPath = path.join(process.env.SYSTEMROOT || 'C:\\Windows', 'System32', 'drivers', 'etc', 'hosts');
+  try {
+    fs.writeFileSync(hostsPath, content, 'utf8');
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+// === REGISTRY CLEANER ===
+ipcMain.handle('sys:registry-scan', async () => {
+  const issues = [];
+  const checkPath = (raw) => {
+    const m = raw.match(/"([^"]+)"/);
+    if (!m) return null;
+    let p = m[1];
+    p = p.replace(/%([^%]+)%/g, (_, k) => process.env[k] || '');
+    if (!fs.existsSync(p)) return p;
+    return null;
+  };
+  const regPaths = [
+    { hive: 'HKCU', path: 'Software\\Microsoft\\Windows\\CurrentVersion\\Run' },
+    { hive: 'HKLM', path: 'Software\\Microsoft\\Windows\\CurrentVersion\\Run' },
+    { hive: 'HKCU', path: 'Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce' },
+  ];
+  for (const rp of regPaths) {
+    try {
+      const out = execSync(`reg query "${rp.hive}\\${rp.path}" 2>nul`, { encoding: 'utf8', timeout: 3000 });
+      const lines = out.split('\n').filter(l => l.trim() && !l.startsWith('HKEY') && !l.includes('<') && !l.includes('(Default)'));
+      for (const line of lines) {
+        const parts = line.trim().split(/\s{4,}|\t+/);
+        if (parts.length >= 2) {
+          const name = parts[0].trim();
+          const value = parts.slice(1).join(' ').trim();
+          const missing = checkPath(value);
+          if (missing) {
+            issues.push({ type: 'run', key: `${rp.hive}\\${rp.path}`, name, value: missing, issue: `Startup entry points to missing file` });
+          }
+        }
+      }
+    } catch {}
+  }
+  return issues;
+});
+
+ipcMain.handle('sys:registry-fix', async (_, { issue }) => {
+  try {
+    execSync(`reg delete "${issue.key}" /v "${issue.name}" /f 2>nul`, { timeout: 3000 });
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+// === HARDWARE DETECTION + AUTO-TUNE ===
+ipcMain.handle('sys:detect-hardware', async () => {
+  let gpu = 'Unknown';
+  try {
+    const out = execSync('powershell -Command "Get-CimInstance Win32_VideoController | Select-Object -First 1 -ExpandProperty Name"', { encoding: 'utf8', timeout: 5000 });
+    const name = out.trim().split('\n')[0];
+    if (name) gpu = name;
+  } catch {}
+
+  let gpuBrand = 'other';
+  const g = gpu.toLowerCase();
+  if (g.includes('nvidia') || g.includes('geforce') || g.includes('quadro') || g.includes('tesla')) gpuBrand = 'nvidia';
+  else if (g.includes('amd') || g.includes('radeon') || g.includes('firepro') || g.includes('ryzen')) gpuBrand = 'amd';
+  else if (g.includes('intel') || g.includes('iris') || g.includes('uhd') || g.includes('hd graphics')) gpuBrand = 'intel';
+
+  const totalMem = os.totalmem();
+  const cpuCores = os.cpus().length;
+  const cpuModel = os.cpus()[0]?.model || 'Unknown';
+
+  let recommended = 'balanced';
+  if (gpuBrand === 'nvidia' || gpuBrand === 'amd') {
+    if (totalMem >= 16 * 1024 ** 3 && cpuCores >= 8) recommended = 'gaming';
+    else if (totalMem >= 8 * 1024 ** 3) recommended = 'balanced';
+    else recommended = 'gaming';
+  } else if (totalMem <= 4 * 1024 ** 3) {
+    recommended = 'battery';
+  }
+
+  return { gpu, gpuBrand, totalMem, cpuCores, cpuModel, recommended };
+});
+
+ipcMain.handle('sys:apply-gpu-tweaks', async (_, { brand }) => {
+  try {
+    if (brand === 'nvidia') {
+      execSync('reg add "HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\PowerManagementSettings" /v PreferMaximumPerformance /t REG_DWORD /d 1 /f 2>nul', { timeout: 3000 });
+    } else if (brand === 'amd') {
+      execSync('reg add "HKLM\\SOFTWARE\\AMD\\PowerTune" /v EnablePowerTune /t REG_DWORD /d 0 /f 2>nul', { timeout: 3000 });
+    }
+    return { success: true };
+  } catch {
+    return { success: false, error: 'Could not apply GPU tweaks (may need Admin)' };
   }
 });

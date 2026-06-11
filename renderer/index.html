@@ -50,6 +50,9 @@
       <button class="tool-btn" data-tab="optimize">Optimize</button>
       <button class="tool-btn" data-tab="startup">Startup</button>
       <button class="tool-btn" data-tab="presets">Presets</button>
+      <button class="tool-btn" data-tab="privacy">Privacy</button>
+      <button class="tool-btn" data-tab="tools">Tools</button>
+      <button class="tool-btn" data-tab="debloat">Debloat</button>
       <button class="tool-btn" data-tab="help">Help</button>
       <button class="tool-btn" data-tab="credits">Credits</button>
     </div>
@@ -79,6 +82,28 @@
           <div class="sys-item"><span>CPU</span><span id="sysCpu">-</span></div>
           <div class="sys-item"><span>Uptime</span><span id="sysUptime">-</span></div>
           <div class="sys-item"><span>Arch</span><span id="sysArch">-</span></div>
+        </div>
+        <div class="section-title">Quick Actions</div>
+        <div class="dash-actions">
+          <div class="dash-action-card" id="quickScanCard">
+            <div class="dash-action-icon">🔍</div>
+            <div class="dash-action-info">
+              <div class="dash-action-title">Quick Scan</div>
+              <div class="dash-action-preview" id="quickScanPreview">Scan temp, cache & junk</div>
+            </div>
+            <button class="dash-action-btn" id="quickScanBtn">Scan</button>
+          </div>
+          <div class="dash-action-card" id="memCleanCard">
+            <div class="dash-action-icon">🧠</div>
+            <div class="dash-action-info">
+              <div class="dash-action-title">Memory</div>
+              <div class="dash-action-preview" id="memCleanPreview">
+                <span id="ramUsageBar" class="mem-bar"><span id="ramUsageFill" class="mem-fill" style="width:50%"></span></span>
+                <span id="ramUsageText">- / -</span>
+              </div>
+            </div>
+            <button class="dash-action-btn" id="memCleanBtn">Free</button>
+          </div>
         </div>
       </div>
 
@@ -129,6 +154,23 @@
           <h2>Performance Presets</h2>
           <p>Apply real system tweaks for your activity</p>
         </div>
+        <div class="auto-tune-card" id="autoTuneCard">
+          <div class="auto-tune-header">
+            <div class="preset-icon">🤖</div>
+            <div>
+              <div class="preset-name">Auto-Tune</div>
+              <div class="preset-desc">Detect your hardware and apply optimal settings</div>
+            </div>
+          </div>
+          <div class="auto-tune-details" id="autoTuneDetails" style="display:none">
+            <div class="auto-tune-row"><span>GPU</span><span id="atGpu">-</span></div>
+            <div class="auto-tune-row"><span>CPU Cores</span><span id="atCpu">-</span></div>
+            <div class="auto-tune-row"><span>RAM</span><span id="atRam">-</span></div>
+            <div class="auto-tune-row safe"><span>Recommended</span><span id="atPreset">-</span></div>
+          </div>
+          <div class="auto-tune-status" id="autoTuneStatus" style="display:none"></div>
+          <button class="auto-tune-btn" id="autoTuneBtn">🔍 Detect Hardware</button>
+        </div>
         <div class="preset-cards large">
           <div class="preset-card active" data-preset="balanced">
             <div class="preset-icon">⚖️</div>
@@ -152,6 +194,142 @@
           </div>
         </div>
         <div id="presetStatus" class="preset-status"></div>
+      </div>
+
+      <!-- PRIVACY -->
+      <div id="tab-privacy" class="tab-content">
+        <div class="cleanup-header">
+          <h2>Privacy & Bloatware</h2>
+          <p>Disable telemetry services and remove unwanted UWP apps</p>
+        </div>
+        <div class="privacy-tabs">
+          <button class="privacy-tab-btn active" data-ptab="services">Services</button>
+          <button class="privacy-tab-btn" data-ptab="uwp">UWP Apps</button>
+        </div>
+        <!-- Services -->
+        <div id="ptab-services" class="ptab-content active">
+          <div class="section-title">Windows Telemetry & Services</div>
+          <div class="service-list" id="serviceList">
+            <div class="empty-state"><p>Loading services...</p></div>
+          </div>
+        </div>
+        <!-- UWP -->
+        <div id="ptab-uwp" class="ptab-content">
+          <div class="section-title">Installed UWP Apps</div>
+          <div class="uwp-list" id="uwpList">
+            <div class="empty-state"><p>Loading apps...</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEBLOAT -->
+      <div id="tab-debloat" class="tab-content">
+        <div class="cleanup-header">
+          <h2>Debloat & Booster</h2>
+          <p>Game booster, latency tweaks, app debloating</p>
+        </div>
+        <div class="preset-cards">
+          <div class="preset-card" id="gameBoosterOn">
+            <div class="preset-icon">🎮</div>
+            <div class="preset-name">Game Booster ON</div>
+            <div class="preset-desc">Stop bg services, high perf power plan</div>
+          </div>
+          <div class="preset-card" id="gameBoosterOff">
+            <div class="preset-icon">🔄</div>
+            <div class="preset-name">Game Booster OFF</div>
+            <div class="preset-desc">Restart services, balanced power</div>
+          </div>
+          <div class="preset-card" id="latencyTweaksBtn">
+            <div class="preset-icon">⚡</div>
+            <div class="preset-name">Latency Tweaks</div>
+            <div class="preset-desc">Disable HPET, optimize mouse/keyboard</div>
+          </div>
+        </div>
+        <div class="section-title" style="margin-top:12px">App Debloat</div>
+        <div class="preset-cards">
+          <div class="preset-card" id="debloatDiscordBtn">
+            <div class="preset-icon">💬</div>
+            <div class="preset-name">Debloat Discord</div>
+            <div class="preset-desc">Remove voice modules, reduce resource use</div>
+          </div>
+          <div class="preset-card" id="debloatSpotifyBtn">
+            <div class="preset-icon">🎵</div>
+            <div class="preset-name">Debloat Spotify</div>
+            <div class="preset-desc">Remove language packs, reduce memory</div>
+          </div>
+        </div>
+        <div id="debloatStatus" class="preset-status" style="display:none"></div>
+      </div>
+
+      <!-- TOOLS -->
+      <div id="tab-tools" class="tab-content">
+        <div class="cleanup-header">
+          <h2>Tools</h2>
+          <p>Network utilities, HOSTS editor, and registry cleaner</p>
+        </div>
+        <div class="tools-tabs">
+          <button class="tools-tab-btn active" data-ttab="network">Network</button>
+          <button class="tools-tab-btn" data-ttab="hosts">HOSTS Editor</button>
+          <button class="tools-tab-btn" data-ttab="registry">Registry Cleaner</button>
+        </div>
+        <!-- Network -->
+        <div id="ttab-network" class="ttab-content active">
+          <div class="section-title">Network Utilities</div>
+          <div class="network-cards">
+            <div class="preset-card" id="flushDnsBtn">
+              <div class="preset-icon">🔄</div>
+              <div class="preset-name">Flush DNS</div>
+              <div class="preset-desc">Clear DNS resolver cache</div>
+            </div>
+            <div class="preset-card" id="dnsDhcpBtn">
+              <div class="preset-icon">📡</div>
+              <div class="preset-name">Auto DNS (DHCP)</div>
+              <div class="preset-desc">Reset to automatic DNS</div>
+            </div>
+          </div>
+          <div class="section-title" style="margin-top:8px">Change DNS Server</div>
+          <div class="dns-grid">
+            <div class="preset-card dns-card" data-primary="1.1.1.1" data-secondary="1.0.0.1">
+              <div class="preset-name">Cloudflare</div>
+              <div class="preset-desc">1.1.1.1 • 1.0.0.1</div>
+            </div>
+            <div class="preset-card dns-card" data-primary="8.8.8.8" data-secondary="8.8.4.4">
+              <div class="preset-name">Google</div>
+              <div class="preset-desc">8.8.8.8 • 8.8.4.4</div>
+            </div>
+            <div class="preset-card dns-card" data-primary="208.67.222.222" data-secondary="208.67.220.220">
+              <div class="preset-name">OpenDNS</div>
+              <div class="preset-desc">208.67.222.222</div>
+            </div>
+            <div class="preset-card dns-card" data-primary="9.9.9.9" data-secondary="149.112.112.112">
+              <div class="preset-name">Quad9</div>
+              <div class="preset-desc">9.9.9.9 • 149.112.112.112</div>
+            </div>
+          </div>
+          <div id="netStatus" class="preset-status" style="display:none"></div>
+        </div>
+        <!-- HOSTS Editor -->
+        <div id="ttab-hosts" class="ttab-content">
+          <div class="section-title">HOSTS File</div>
+          <p class="hosts-hint">Location: <span id="hostsPath">C:\Windows\System32\drivers\etc\hosts</span></p>
+          <textarea id="hostsEditor" class="hosts-editor" spellcheck="false"></textarea>
+          <div class="hosts-actions">
+            <button id="hostsRefreshBtn" class="tool-action-btn">↻ Refresh</button>
+            <button id="hostsSaveBtn" class="tool-action-btn primary">Save</button>
+          </div>
+          <div id="hostsStatus" class="preset-status" style="display:none"></div>
+        </div>
+        <!-- Registry Cleaner -->
+        <div id="ttab-registry" class="ttab-content">
+          <div class="section-title">Registry Cleaner</div>
+          <p class="hosts-hint">Scan for invalid startup entries pointing to missing files</p>
+          <button id="registryScanBtn" class="tool-action-btn primary">🔍 Scan Registry</button>
+          <div id="registryProgress" class="progress-container" style="display:none">
+            <div class="progress-bar"><div class="progress-fill" id="registryFill"></div></div>
+            <span class="progress-text" id="registryScanText">Scanning...</span>
+          </div>
+          <div id="registryIssues" class="registry-list"></div>
+        </div>
       </div>
 
       <!-- HELP / SUPPORT -->
@@ -191,7 +369,7 @@
             </svg>
           </div>
           <h1 class="credits-title">Kuno Optimizer</h1>
-          <p class="credits-version">v1.0.2</p>
+          <p class="credits-version">v1.0.5</p>
           <p class="credits-made">made by <strong>Kuno</strong></p>
           <div class="credits-divider"></div>
           <p class="credits-desc">

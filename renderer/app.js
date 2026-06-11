@@ -68,8 +68,11 @@ document.querySelectorAll('.tool-btn').forEach(btn => {
     btn.classList.add('active');
     const tab = document.getElementById('tab-' + btn.dataset.tab);
     if (tab) tab.classList.add('active');
-    if (btn.dataset.tab === 'dashboard') loadDashboard();
-    if (btn.dataset.tab === 'startup') loadStartup();
+      if (btn.dataset.tab === 'dashboard') loadDashboard();
+      if (btn.dataset.tab === 'startup') loadStartup();
+      if (btn.dataset.tab === 'privacy') loadServices();
+      if (btn.dataset.tab === 'debloat') { /* cards handle themselves */ }
+      if (btn.dataset.tab === 'tools') { /* nothing to preload — sub-tabs handle themselves */ }
   });
 });
 
@@ -103,7 +106,75 @@ async function loadDashboard() {
     `;
     diskList.appendChild(item);
   });
+
+  // Quick scan preview + RAM usage
+  updateMemUsage();
+  loadQuickScanPreview();
 }
+
+async function loadQuickScanPreview() {
+  const preview = document.getElementById('quickScanPreview');
+  preview.textContent = 'Scanning...';
+  const r = await window.kuno.quickScan();
+  if (r && r.totalSize > 0) {
+    preview.textContent = `${r.totalItems} items — ${formatBytes(r.totalSize)} deletable`;
+  } else {
+    preview.textContent = 'System is clean';
+  }
+}
+
+async function updateMemUsage() {
+  const r = await window.kuno.getSysInfo();
+  const used = r.totalMem - r.freeMem;
+  const pct = r.totalMem > 0 ? (used / r.totalMem * 100) : 0;
+  document.getElementById('ramUsageFill').style.width = Math.min(pct, 100) + '%';
+  document.getElementById('ramUsageText').textContent = `${formatBytes(used)} / ${formatBytes(r.totalMem)}`;
+}
+
+// Quick Scan
+document.getElementById('quickScanBtn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('quickScanBtn');
+  btn.textContent = '...'; btn.disabled = true;
+  const preview = document.getElementById('quickScanPreview');
+  preview.textContent = 'Scanning...';
+  const r = await window.kuno.quickScan();
+  if (r && r.totalSize > 0) {
+    preview.textContent = `${r.totalItems} items — ${formatBytes(r.totalSize)}`;
+    // Run quick clean after showing result
+    const clean = await window.kuno.runCleanup('quick');
+    if (clean.success) {
+      let cleaned = 0, size = 0;
+      clean.results.forEach(item => { cleaned += item.cleaned; size += item.size; });
+      preview.textContent = `Cleaned ${cleaned} items (${formatBytes(size)})`;
+    }
+  } else {
+    preview.textContent = 'Nothing to clean';
+  }
+  btn.textContent = 'Scan';
+  btn.disabled = false;
+});
+
+// Memory Cleaner
+document.getElementById('memCleanBtn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('memCleanBtn');
+  const text = document.getElementById('ramUsageText');
+  btn.textContent = '...'; btn.disabled = true;
+  text.textContent = 'Freeing memory...';
+  const r = await window.kuno.freeMemory();
+  if (r.success) {
+    const total = (await window.kuno.getSysInfo()).totalMem;
+    const used = total - r.free;
+    const pct = total > 0 ? (used / total * 100) : 0;
+    document.getElementById('ramUsageFill').style.width = Math.min(pct, 100) + '%';
+    const freedBytes = r.freed || 0;
+    text.textContent = `${formatBytes(used)} / ${formatBytes(total)} (freed ${formatBytes(freedBytes)})`;
+  } else {
+    text.textContent = 'Failed: ' + esc(r.error || '');
+  }
+  btn.textContent = 'Free';
+  btn.disabled = false;
+  setTimeout(() => updateMemUsage(), 2000);
+});
 
 // Optimize — Cleanup
 document.querySelectorAll('#tab-optimize .preset-card[data-mode]').forEach(card => {
@@ -194,11 +265,15 @@ async function loadStartup() {
     `;
     list.appendChild(el);
     el.querySelector('.startup-btn').addEventListener('click', async () => {
+      const btn = el.querySelector('.startup-btn');
+      btn.textContent = '...'; btn.disabled = true;
       const r = await window.kuno.disableStartup({ name: item.name });
       if (r.success) {
         el.style.opacity = '0.3';
-        el.querySelector('.startup-btn').textContent = 'Disabled';
-        el.querySelector('.startup-btn').disabled = true;
+        btn.textContent = 'Disabled';
+      } else {
+        btn.textContent = 'Failed';
+        setTimeout(() => { btn.textContent = 'Disable'; btn.disabled = false; }, 2000);
       }
     });
   });
@@ -257,7 +332,19 @@ const helpDB = {
   },
   tips: {
     keywords: ['tip', 'tips', 'advice', 'optimize', 'speed up', 'faster', 'performance', 'tweak'],
-    answer: 'Quick performance tips:<br>1. Run <strong>Deep Clean</strong> weekly to clear junk<br>2. Use <strong>Gaming preset</strong> before launching games<br>3. Disable unnecessary startup programs<br>4. Create a <strong>Restore Point</strong> before major changes<br>5. Keep your drivers updated<br>6. Avoid running too many background apps'
+    answer: 'Quick performance tips:<br>1. Run <strong>Deep Clean</strong> weekly to clear junk<br>2. Use <strong>Gaming preset</strong> before launching games<br>3. Disable unnecessary startup programs<br>4. Create a <strong>Restore Point</strong> before major changes<br>5. Use <strong>Quick Scan</strong> on Dashboard for one-click junk cleaning<br>6. Use <strong>Memory Free</strong> on Dashboard to free up RAM<br>7. Enable <strong>Game Booster</strong> in the Debloat tab for max FPS<br>8. Keep your drivers updated'
+  },
+  debloat: {
+    keywords: ['debloat', 'game booster', 'game', 'fps', 'latency', 'spotify', 'discord', 'hpet'],
+    answer: 'The <strong>Debloat</strong> tab has tools to improve gaming and reduce bloat:<br>• <strong>Game Booster</strong> — stops background services and enables High Performance power plan<br>• <strong>Latency Tweaks</strong> — disables HPET timer, optimizes mouse and keyboard response<br>• <strong>Debloat Discord</strong> — removes voice modules to reduce Discord resource usage<br>• <strong>Debloat Spotify</strong> — removes language packs to free memory<br>Some tweaks (like HPET) require a reboot to take effect.'
+  },
+  memory: {
+    keywords: ['memory', 'ram', 'free memory', 'memory cleaner', 'memredact', 'cleaner'],
+    answer: 'The <strong>Memory</strong> tool on the Dashboard shows real-time RAM usage. Click <strong>Free</strong> to release unused working sets and clear system cache (similar to MemReduct). You\'ll see how much memory was freed after each run.'
+  },
+  quickscan: {
+    keywords: ['quick scan', 'quick clean', 'junk', 'temp cleaner', 'one click'],
+    answer: 'The <strong>Quick Scan</strong> card on the Dashboard shows how much deletable junk is on your system (temp files, prefetch, browser cache). Click <strong>Scan</strong> to clean it — it runs the Quick Clean and shows how much space was freed.'
   },
   restore: {
     keywords: ['restore point', 'backup', 'system restore', 'rollback', 'checkpoint'],
@@ -295,7 +382,19 @@ function addChatMessage(text, isUser) {
   box.scrollTop = box.scrollHeight;
 }
 
+let lastChatTime = 0;
+const CHAT_COOLDOWN = 1500;
+
 function handleChat() {
+  const now = Date.now();
+  if (now - lastChatTime < CHAT_COOLDOWN) {
+    const input = document.getElementById('chatInput');
+    input.style.borderColor = 'var(--danger)';
+    input.placeholder = 'Please wait...';
+    setTimeout(() => { input.style.borderColor = ''; input.placeholder = 'Type a question...'; }, 1000);
+    return;
+  }
+  lastChatTime = now;
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
   if (!text) return;
@@ -314,6 +413,385 @@ document.querySelectorAll('.suggestion-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.getElementById('chatInput').value = btn.dataset.ask;
     handleChat();
+  });
+});
+
+// === PRIVACY — Services ===
+async function loadServices() {
+  const list = document.getElementById('serviceList');
+  list.innerHTML = '<div class="empty-state"><p>Loading services...</p></div>';
+  const services = await window.kuno.getPrivacyServices();
+  if (!services || !services.length) {
+    list.innerHTML = '<div class="empty-state"><p>No services found</p></div>';
+    return;
+  }
+  list.innerHTML = '';
+  services.forEach(svc => {
+    if (!svc.exists) return;
+    const el = document.createElement('div');
+    el.className = 'service-item';
+    const running = svc.running;
+    el.innerHTML = `
+      <div class="service-info">
+        <div class="service-name">${esc(svc.name)}</div>
+        <div class="service-label">${esc(svc.label)}</div>
+      </div>
+      <span class="service-badge ${running ? 'running' : 'stopped'}">${running ? 'Running' : 'Stopped'}</span>
+      <div class="toggle-wrap">
+        <input type="checkbox" class="toggle-check" id="svc-${svc.name}" ${running ? 'checked' : ''}>
+        <label class="toggle-label" for="svc-${svc.name}"></label>
+      </div>
+    `;
+    list.appendChild(el);
+    const toggle = el.querySelector('.toggle-check');
+    toggle.addEventListener('change', async () => {
+      const action = toggle.checked ? 'start' : 'stop';
+      const r = await window.kuno.setService({ name: svc.name, action });
+      if (!r.success) {
+        toggle.checked = !toggle.checked;
+        const badge = el.querySelector('.service-badge');
+        badge.textContent = svc.running ? 'Running' : 'Stopped';
+        badge.className = 'service-badge ' + (svc.running ? 'running' : 'stopped');
+      } else {
+        svc.running = action === 'start';
+        const badge = el.querySelector('.service-badge');
+        badge.textContent = svc.running ? 'Running' : 'Stopped';
+        badge.className = 'service-badge ' + (svc.running ? 'running' : 'stopped');
+      }
+    });
+  });
+}
+
+// === PRIVACY — UWP ===
+async function loadUwpApps() {
+  const list = document.getElementById('uwpList');
+  list.innerHTML = '<div class="empty-state"><p>Loading apps...</p></div>';
+  const apps = await window.kuno.getUwpApps();
+  if (!apps || !apps.length) {
+    list.innerHTML = '<div class="empty-state"><p>No UWP apps found</p></div>';
+    return;
+  }
+  list.innerHTML = '';
+  apps.forEach(app => {
+    const el = document.createElement('div');
+    el.className = 'uwp-item';
+    el.innerHTML = `
+      <div class="uwp-info">
+        <div class="uwp-name">${esc(app.name)}</div>
+        <div class="uwp-desc">${esc(app.fullName)}</div>
+      </div>
+      <button class="uwp-uninstall-btn">Uninstall</button>
+    `;
+    list.appendChild(el);
+    el.querySelector('.uwp-uninstall-btn').addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      btn.textContent = '...'; btn.disabled = true;
+      const r = await window.kuno.uninstallUwp({ fullName: app.fullName });
+      if (r.success) {
+        btn.textContent = '✓'; btn.style.background = 'rgba(48,209,88,0.15)'; btn.style.color = 'var(--safe)';
+        setTimeout(() => { if (el.parentNode) el.style.opacity = '0.3'; }, 500);
+      } else {
+        btn.textContent = 'Failed'; btn.disabled = false;
+      }
+    });
+  });
+}
+
+// Privacy sub-tabs
+document.querySelectorAll('.privacy-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.privacy-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.ptab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = document.getElementById('ptab-' + btn.dataset.ptab);
+    if (tab) tab.classList.add('active');
+    if (btn.dataset.ptab === 'services') loadServices();
+    if (btn.dataset.ptab === 'uwp') loadUwpApps();
+  });
+});
+
+// === TOOLS — Network ===
+document.getElementById('flushDnsBtn')?.addEventListener('click', async () => {
+  const status = document.getElementById('netStatus');
+  status.style.display = 'block';
+  status.textContent = 'Flushing DNS...';
+  status.style.border = '1px solid var(--warn)';
+  status.style.color = 'var(--warn)';
+  const r = await window.kuno.flushDns();
+  if (r.success) {
+    status.textContent = '✓ DNS cache flushed successfully';
+    status.style.border = '1px solid var(--safe)';
+    status.style.color = 'var(--safe)';
+  } else {
+    status.textContent = '✕ Failed to flush DNS';
+    status.style.border = '1px solid var(--danger)';
+    status.style.color = 'var(--danger)';
+  }
+  setTimeout(() => { status.style.display = 'none'; }, 3000);
+});
+
+document.getElementById('dnsDhcpBtn')?.addEventListener('click', async () => {
+  const status = document.getElementById('netStatus');
+  status.style.display = 'block';
+  status.textContent = 'Resetting DNS to automatic...';
+  status.style.border = '1px solid var(--warn)';
+  status.style.color = 'var(--warn)';
+  const r = await window.kuno.dnsDhcp();
+  if (r.success) {
+    status.textContent = '✓ DNS set to automatic (DHCP)';
+    status.style.border = '1px solid var(--safe)';
+    status.style.color = 'var(--safe)';
+  } else {
+    status.textContent = '✕ Failed: ' + esc(r.error || 'unknown');
+    status.style.border = '1px solid var(--danger)';
+    status.style.color = 'var(--danger)';
+  }
+  setTimeout(() => { status.style.display = 'none'; }, 3000);
+});
+
+document.querySelectorAll('.dns-card').forEach(card => {
+  card.addEventListener('click', async () => {
+    const status = document.getElementById('netStatus');
+    const primary = card.dataset.primary;
+    const secondary = card.dataset.secondary;
+    status.style.display = 'block';
+    status.textContent = `Setting DNS to ${primary}...`;
+    status.style.border = '1px solid var(--warn)';
+    status.style.color = 'var(--warn)';
+    const r = await window.kuno.setDns({ primary, secondary });
+    if (r.success) {
+      status.textContent = `✓ DNS set to ${primary}${secondary ? ' / ' + secondary : ''}`;
+      status.style.border = '1px solid var(--safe)';
+      status.style.color = 'var(--safe)';
+    } else {
+      status.textContent = '✕ Failed: ' + esc(r.error || 'unknown');
+      status.style.border = '1px solid var(--danger)';
+      status.style.color = 'var(--danger)';
+    }
+    setTimeout(() => { status.style.display = 'none'; }, 4000);
+  });
+});
+
+// === TOOLS — Hosts ===
+async function loadHosts() {
+  const editor = document.getElementById('hostsEditor');
+  const pathEl = document.getElementById('hostsPath');
+  const r = await window.kuno.getHosts();
+  if (pathEl) pathEl.textContent = r.path || 'Unknown';
+  editor.value = r.content || '# Unable to read hosts file';
+  if (r.error) {
+    const status = document.getElementById('hostsStatus');
+    status.style.display = 'block';
+    status.textContent = '⚠ Read error: ' + esc(r.error) + ' (may need Admin)';
+    status.style.border = '1px solid var(--warn)';
+    status.style.color = 'var(--warn)';
+  }
+}
+
+document.getElementById('hostsRefreshBtn')?.addEventListener('click', () => {
+  loadHosts();
+  const status = document.getElementById('hostsStatus');
+  status.style.display = 'none';
+});
+
+document.getElementById('hostsSaveBtn')?.addEventListener('click', async () => {
+  const status = document.getElementById('hostsStatus');
+  const content = document.getElementById('hostsEditor').value;
+  status.style.display = 'block';
+  status.textContent = 'Saving...';
+  status.style.border = '1px solid var(--warn)';
+  status.style.color = 'var(--warn)';
+  const r = await window.kuno.saveHosts({ content });
+  if (r.success) {
+    status.textContent = '✓ HOSTS file saved';
+    status.style.border = '1px solid var(--safe)';
+    status.style.color = 'var(--safe)';
+  } else {
+    status.textContent = '✕ Save failed: ' + esc(r.error || 'unknown');
+    status.style.border = '1px solid var(--danger)';
+    status.style.color = 'var(--danger)';
+  }
+  setTimeout(() => { status.style.display = 'none'; }, 3000);
+});
+
+// === TOOLS — Registry Cleaner ===
+document.getElementById('registryScanBtn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('registryScanBtn');
+  const progress = document.getElementById('registryProgress');
+  const fill = document.getElementById('registryFill');
+  const text = document.getElementById('registryScanText');
+  const list = document.getElementById('registryIssues');
+
+  btn.textContent = 'Scanning...'; btn.disabled = true;
+  progress.style.display = 'flex';
+  fill.style.width = '0%'; text.textContent = 'Scanning registry...';
+  list.innerHTML = '';
+
+  fill.style.width = '60%';
+  const issues = await window.kuno.registryScan();
+
+  fill.style.width = '100%'; text.textContent = 'Done!';
+  btn.textContent = '🔍 Scan Registry'; btn.disabled = false;
+
+  if (!issues || !issues.length) {
+    list.innerHTML = '<div class="empty-state"><p>✓ No broken startup entries found</p></div>';
+  } else {
+    list.innerHTML = '';
+    issues.forEach(issue => {
+      const el = document.createElement('div');
+      el.className = 'registry-item';
+      el.innerHTML = `
+        <div class="registry-info">
+          <div class="registry-name">${esc(issue.name)} — ${esc(issue.issue)}</div>
+          <div class="registry-path">${esc(issue.value)}</div>
+        </div>
+        <button class="registry-fix-btn">Fix</button>
+      `;
+      list.appendChild(el);
+      el.querySelector('.registry-fix-btn').addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        btn.textContent = '...'; btn.disabled = true;
+        const r = await window.kuno.registryFix({ issue });
+        if (r.success) {
+          btn.textContent = '✓ Fixed';
+          btn.style.background = 'rgba(48,209,88,0.15)';
+          btn.style.color = 'var(--safe)';
+          el.style.opacity = '0.3';
+        } else {
+          btn.textContent = 'Failed';
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+  setTimeout(() => { progress.style.display = 'none'; }, 2000);
+});
+
+// === AUTO-TUNE ===
+document.getElementById('autoTuneBtn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('autoTuneBtn');
+  const details = document.getElementById('autoTuneDetails');
+  const status = document.getElementById('autoTuneStatus');
+  const hw = await window.kuno.detectHardware();
+
+  document.getElementById('atGpu').textContent = hw.gpu.substring(0, 40) || 'Unknown';
+  document.getElementById('atCpu').textContent = hw.cpuCores + ' (' + (hw.cpuModel || '').substring(0, 20) + ')';
+  document.getElementById('atRam').textContent = formatBytes(hw.totalMem);
+  document.getElementById('atPreset').textContent = hw.recommended.charAt(0).toUpperCase() + hw.recommended.slice(1);
+  details.style.display = 'flex';
+
+  btn.textContent = '⚙ Applying...';
+  btn.disabled = true;
+
+  // Apply recommended preset
+  const r1 = await window.kuno.applyPreset(hw.recommended);
+  // Apply GPU tweaks
+  const r2 = await window.kuno.applyGpuTweaks({ brand: hw.gpuBrand });
+
+  status.style.display = 'block';
+  if (r1.success) {
+    status.textContent = `✓ ${hw.recommended.charAt(0).toUpperCase() + hw.recommended.slice(1)} preset applied` +
+      (r2.success && hw.gpuBrand !== 'other' && hw.gpuBrand !== 'intel' ? ` + ${hw.gpuBrand.toUpperCase()} GPU optimizations` : '');
+    status.style.border = '1px solid var(--safe)';
+    status.style.color = 'var(--safe)';
+  } else {
+    status.textContent = '⚠ Partial — some tweaks may need Admin';
+    status.style.border = '1px solid var(--warn)';
+    status.style.color = 'var(--warn)';
+  }
+
+  btn.textContent = '✓ Auto-Tuned!';
+  setTimeout(() => {
+    btn.textContent = '🔄 Re-Detect';
+    btn.disabled = false;
+  }, 3000);
+});
+
+// === DEBLOAT TAB ===
+document.getElementById('gameBoosterOn')?.addEventListener('click', async () => {
+  const status = document.getElementById('debloatStatus');
+  status.style.display = 'block'; status.textContent = 'Enabling game booster...';
+  status.style.border = '1px solid var(--warn)'; status.style.color = 'var(--warn)';
+  const r = await window.kuno.gameBooster({ action: 'on' });
+  if (r.success) {
+    status.textContent = '✓ Game booster ON — background services stopped, high perf power';
+    status.style.border = '1px solid var(--safe)'; status.style.color = 'var(--safe)';
+  } else {
+    status.textContent = '✕ Failed: ' + esc(r.error || '');
+    status.style.border = '1px solid var(--danger)'; status.style.color = 'var(--danger)';
+  }
+  setTimeout(() => { status.style.display = 'none'; }, 4000);
+});
+
+document.getElementById('gameBoosterOff')?.addEventListener('click', async () => {
+  const status = document.getElementById('debloatStatus');
+  status.style.display = 'block'; status.textContent = 'Disabling game booster...';
+  status.style.border = '1px solid var(--warn)'; status.style.color = 'var(--warn)';
+  const r = await window.kuno.gameBooster({ action: 'off' });
+  if (r.success) {
+    status.textContent = '✓ Game booster OFF — services restarted';
+    status.style.border = '1px solid var(--safe)'; status.style.color = 'var(--safe)';
+  } else {
+    status.textContent = '✕ Failed: ' + esc(r.error || '');
+    status.style.border = '1px solid var(--danger)'; status.style.color = 'var(--danger)';
+  }
+  setTimeout(() => { status.style.display = 'none'; }, 4000);
+});
+
+document.getElementById('latencyTweaksBtn')?.addEventListener('click', async () => {
+  const status = document.getElementById('debloatStatus');
+  status.style.display = 'block'; status.textContent = 'Applying latency tweaks...';
+  status.style.border = '1px solid var(--warn)'; status.style.color = 'var(--warn)';
+  const r = await window.kuno.latencyTweaks();
+  if (r.success) {
+    status.textContent = '✓ ' + (r.results || []).join(' • ') || 'Latency tweaks applied (reboot may be needed)';
+    status.style.border = '1px solid var(--safe)'; status.style.color = 'var(--safe)';
+  } else {
+    status.textContent = '✕ Failed: ' + esc(r.error || '');
+    status.style.border = '1px solid var(--danger)'; status.style.color = 'var(--danger)';
+  }
+  setTimeout(() => { status.style.display = 'none'; }, 5000);
+});
+
+document.getElementById('debloatDiscordBtn')?.addEventListener('click', async () => {
+  const status = document.getElementById('debloatStatus');
+  status.style.display = 'block'; status.textContent = 'Debloating Discord...';
+  status.style.border = '1px solid var(--warn)'; status.style.color = 'var(--warn)';
+  const r = await window.kuno.debloatDiscord();
+  if (r.success) {
+    status.textContent = '✓ ' + esc(r.message);
+    status.style.border = '1px solid var(--safe)'; status.style.color = 'var(--safe)';
+  } else {
+    status.textContent = '✕ ' + esc(r.error || '');
+    status.style.border = '1px solid var(--danger)'; status.style.color = 'var(--danger)';
+  }
+  setTimeout(() => { status.style.display = 'none'; }, 4000);
+});
+
+document.getElementById('debloatSpotifyBtn')?.addEventListener('click', async () => {
+  const status = document.getElementById('debloatStatus');
+  status.style.display = 'block'; status.textContent = 'Debloating Spotify...';
+  status.style.border = '1px solid var(--warn)'; status.style.color = 'var(--warn)';
+  const r = await window.kuno.debloatSpotify();
+  if (r.success) {
+    status.textContent = '✓ ' + esc(r.message);
+    status.style.border = '1px solid var(--safe)'; status.style.color = 'var(--safe)';
+  } else {
+    status.textContent = '✕ ' + esc(r.error || '');
+    status.style.border = '1px solid var(--danger)'; status.style.color = 'var(--danger)';
+  }
+  setTimeout(() => { status.style.display = 'none'; }, 4000);
+});
+
+// Tools sub-tabs
+document.querySelectorAll('.tools-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tools-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.ttab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = document.getElementById('ttab-' + btn.dataset.ttab);
+    if (tab) tab.classList.add('active');
+    if (btn.dataset.ttab === 'hosts') loadHosts();
   });
 });
 
