@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>Kuno Optimizer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="screen active">
+    <div class="login-box">
+      <div class="login-logo">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M12 8v4M12 16h.01"/>
+        </svg>
+      </div>
+      <h1 class="login-title">Kuno Optimizer</h1>
+      <p class="login-sub">by <strong>Kuno</strong></p>
+
+      <div id="loginForm" class="login-form">
+        <input type="text" id="loginUser" placeholder="Username" class="login-input" autocomplete="off">
+        <input type="password" id="loginPass" placeholder="Password" class="login-input">
+        <p id="loginError" class="login-error"></p>
+        <button id="loginBtn" class="login-btn">Sign In</button>
+        <button id="registerBtn" class="login-btn secondary">Create Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="appScreen" class="screen">
+
+    <!-- Title Bar -->
+    <div class="titlebar">
+      <div class="traffic-lights">
+        <span class="dot close"></span>
+        <span class="dot minimize"></span>
+        <span class="dot maximize"></span>
+      </div>
+      <span class="title">Kuno Optimizer</span>
+      <div class="title-right">
+        <span id="userBadge" class="user-badge"></span>
+        <button id="logoutBtn" class="logout-btn" title="Sign out">→</button>
+      </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="toolbar">
+      <button class="tool-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tool-btn" data-tab="cleanup">Cleanup</button>
+      <button class="tool-btn" data-tab="startup">Startup</button>
+      <button class="tool-btn" data-tab="presets">Presets</button>
+    </div>
+
+    <!-- Content -->
+    <div class="container">
+      <!-- DASHBOARD -->
+      <div id="tab-dashboard" class="tab-content active">
+        <div class="grid-3">
+          <div class="stat-card" id="cpuCard">
+            <div class="stat-icon cpu"></div>
+            <span class="stat-value" id="cpuCount">-</span>
+            <span class="stat-label">CPU Cores</span>
+          </div>
+          <div class="stat-card" id="ramCard">
+            <div class="stat-icon ram"></div>
+            <span class="stat-value" id="ramTotal">-</span>
+            <span class="stat-label">RAM</span>
+          </div>
+          <div class="stat-card" id="osCard">
+            <div class="stat-icon os"></div>
+            <span class="stat-value" id="osName">-</span>
+            <span class="stat-label">OS</span>
+          </div>
+        </div>
+
+        <div class="section-title">Disk Usage</div>
+        <div id="diskList" class="disk-list"></div>
+
+        <div class="section-title">System</div>
+        <div class="sys-grid">
+          <div class="sys-item"><span>Hostname</span><span id="sysHostname">-</span></div>
+          <div class="sys-item"><span>CPU</span><span id="sysCpu">-</span></div>
+          <div class="sys-item"><span>Uptime</span><span id="sysUptime">-</span></div>
+          <div class="sys-item"><span>Architecture</span><span id="sysArch">-</span></div>
+        </div>
+      </div>
+
+      <!-- CLEANUP -->
+      <div id="tab-cleanup" class="tab-content">
+        <div class="cleanup-header">
+          <h2>System Cleanup</h2>
+          <p>Free up space by removing temporary and unnecessary files</p>
+        </div>
+        <div class="preset-cards">
+          <div class="preset-card" data-mode="quick">
+            <div class="preset-icon">⚡</div>
+            <div class="preset-name">Quick Clean</div>
+            <div class="preset-desc">Temp files only — safe & fast</div>
+          </div>
+          <div class="preset-card" data-mode="deep">
+            <div class="preset-icon">🔍</div>
+            <div class="preset-name">Deep Clean</div>
+            <div class="preset-desc">Temp, prefetch & browser cache</div>
+          </div>
+          <div class="preset-card" data-mode="full">
+            <div class="preset-icon">💥</div>
+            <div class="preset-name">Full Clean</div>
+            <div class="preset-desc">Everything — max space recovery</div>
+          </div>
+        </div>
+        <div class="progress-container" id="cleanupProgress" style="display:none">
+          <div class="progress-bar"><div class="progress-fill" id="cleanupFill"></div></div>
+          <span class="progress-text" id="cleanupText">Cleaning...</span>
+        </div>
+        <div id="cleanupResults" class="cleanup-results"></div>
+      </div>
+
+      <!-- STARTUP -->
+      <div id="tab-startup" class="tab-content">
+        <div class="cleanup-header">
+          <h2>Startup Manager</h2>
+          <p>Manage which programs launch when your computer starts</p>
+        </div>
+        <div id="startupList" class="startup-list">
+          <div class="empty-state"><p>Loading...</p></div>
+        </div>
+      </div>
+
+      <!-- PRESETS -->
+      <div id="tab-presets" class="tab-content">
+        <div class="cleanup-header">
+          <h2>Performance Presets</h2>
+          <p>Apply optimized settings for your current activity</p>
+        </div>
+        <div class="preset-cards large">
+          <div class="preset-card active" data-preset="balanced">
+            <div class="preset-icon">⚖️</div>
+            <div class="preset-name">Balanced</div>
+            <div class="preset-desc">Default — good performance & battery life</div>
+          </div>
+          <div class="preset-card" data-preset="gaming">
+            <div class="preset-icon">🎮</div>
+            <div class="preset-name">Gaming</div>
+            <div class="preset-desc">Max performance — disable bg apps & effects</div>
+          </div>
+          <div class="preset-card" data-preset="work">
+            <div class="preset-icon">💼</div>
+            <div class="preset-name">Work</div>
+            <div class="preset-desc">Productivity — focus on stability</div>
+          </div>
+          <div class="preset-card" data-preset="battery">
+            <div class="preset-icon">🔋</div>
+            <div class="preset-name">Battery Saver</div>
+            <div class="preset-desc">Minimal — extend battery life</div>
+          </div>
+        </div>
+        <div id="presetStatus" class="preset-status"></div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <span>Kuno Optimizer v1.0.0 — made by <strong>Kuno</strong></span>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
